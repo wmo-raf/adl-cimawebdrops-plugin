@@ -1,0 +1,10 @@
+{
+  "name": "adl-cimawebdrops-plugin",
+  "version": "0.0.1",
+  "description": "An ADL plugin for collecting observation data from CIMA Webdrops API",
+  "author": "TODO",
+  "author_url": "TODO",
+  "url": "TODO",
+  "license": "TODO",
+  "contact": "TODO"
+}

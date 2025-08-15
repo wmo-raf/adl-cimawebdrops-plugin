@@ -1,0 +1,190 @@
+<div>
+    <div class="w-field__errors" style="margin-bottom: 10px">
+        <p class="error-message" id="error-message" style="display: none"></p>
+    </div>
+
+    <div style="display: flex;align-items: center">
+        <select name="{{ widget.name }}" {% include "django/forms/widgets/attrs.html" %}>
+        </select>
+        <div id="spinner" style="margin-left: 10px;display: none">
+            <svg class="icon icon-spinner w-w-8 w-h-8" aria-hidden="true">
+                <use href="#icon-spinner"></use>
+            </svg>
+        </div>
+    </div>
+    <script>
+        class RemoteStationSelectWidget {
+            #defaultOption = {label: "---------", value: ""};
+
+            constructor({
+                            widgetId,
+                            stationsUrl,
+                            initialStationId,
+                            networkConnectionInputId,
+                            errorMessageElId,
+                            spinnerId,
+                            defaultOption,
+                        }) {
+                this.widgetId = widgetId;
+                this.stationsUrl = stationsUrl;
+                this.initialStationId = initialStationId;
+                this.#defaultOption = defaultOption || this.#defaultOption;
+
+                this.selectInput = document.getElementById(this.widgetId);
+                this.networkConnectionInput = document.getElementById(networkConnectionInputId);
+                this.errorMessageEl = document.getElementById(errorMessageElId);
+                this.spinner = document.getElementById(spinnerId);
+
+                if (!this.selectInput || !this.networkConnectionInput || !this.errorMessageEl || !this.spinner) {
+                    throw new Error('One or more required DOM elements are missing.');
+                }
+
+                this.debouncedSetStationOptions = this.debounce(this.debouncedSetStationOptions.bind(this), 300);
+                this.init();
+            }
+
+            async init() {
+                const selectedNetworkConnectionId = this.networkConnectionInput.value;
+
+                if (selectedNetworkConnectionId) {
+                    await this.debouncedSetStationOptions(selectedNetworkConnectionId)
+                }
+
+                this.networkConnectionInput.addEventListener('change', (event) => {
+                    this.reset()
+
+                    this.clearInitial()
+
+                    this.debouncedSetStationOptions(event.target.value);
+                });
+            }
+
+            showSpinner() {
+                this.spinner.style.display = 'block';
+            }
+
+            hideSpinner() {
+                this.spinner.style.display = 'none';
+            }
+
+            setSelectedOption(value) {
+                this.selectInput.value = value;
+            }
+
+            async debouncedSetStationOptions(selectedNetworkConnectionId) {
+                this.showSpinner();
+
+                this.clearSelectInput();
+
+                const response = await this.getStationsForConnection(selectedNetworkConnectionId);
+                this.hideSpinner();
+
+                if (response.error) {
+                    this.addError(response.error);
+                    return;
+                }
+
+                this.errorMessageEl.style.display = 'none';
+                this.populateSelectInput(response);
+
+                if (this.initialStationId) {
+                    this.setSelectedOption(this.initialStationId);
+
+                    // trigger change
+                    const event = new CustomEvent('change', {
+                        bubbles: true, detail: {
+                            custom: true
+                        }
+                    });
+
+
+                    this.selectInput.dispatchEvent(event);
+                }
+            }
+
+            clearInitial() {
+                this.initialStationId = '';
+            }
+
+            reset() {
+                this.clearSelectInput();
+                this.clearError();
+            }
+
+            clearError() {
+                this.errorMessageEl.textContent = '';
+                this.errorMessageEl.style.display = 'none';
+            }
+
+            addError(message) {
+                this.errorMessageEl.textContent = message;
+                this.errorMessageEl.style.display = 'block';
+            }
+
+            async getStationsForConnection(connectionId) {
+                try {
+                    const response = await fetch(`${this.stationsUrl}?connection_id=${connectionId}`);
+                    if (!response.ok) {
+                        const res = await response.json();
+                        if (res.error) {
+                            throw new Error(res.error);
+                        } else {
+                            // get error message from server
+                            throw new Error(`HTTP error! Status: ${response.status}`);
+                        }
+                    }
+                    return await response.json();
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    return {error: error.message};
+                }
+            }
+
+            clearSelectInput() {
+                this.selectInput.innerHTML = '';
+            }
+
+            appendOptionToSelect(option) {
+                const optionElement = this.createOptionElement(option);
+                this.selectInput.appendChild(optionElement);
+            }
+
+            populateSelectInput(options) {
+                this.clearSelectInput();
+                this.appendOptionToSelect(this.#defaultOption);
+                options.forEach(option => this.appendOptionToSelect(option));
+            }
+
+            createOptionElement(option) {
+                const optionElement = document.createElement('option');
+                optionElement.value = option.value;
+                optionElement.textContent = option.label;
+                return optionElement;
+            }
+
+            debounce(func, wait) {
+                let timeout;
+                return function (...args) {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+
+            destroy() {
+                this.networkConnectionInput.removeEventListener('change', this.debouncedSetStationOptions);
+            }
+        }
+
+        // Initialize the widget
+        new RemoteStationSelectWidget({
+            widgetId: '{{ widget.attrs.id }}',
+            stationsUrl: '{{ cimawebdrops_stations_url }}',
+            initialStationId: '{{ widget.value|default_if_none:"" }}',
+            networkConnectionInputId: "id_network_connection",
+            errorMessageElId: "error-message",
+            spinnerId: "spinner",
+        });
+
+    </script>
+
+</div>

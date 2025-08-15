@@ -1,0 +1,362 @@
+[
+  {
+    "station_id": "17.67978_34.00370",
+    "station_name": "Sudan - Atbara K3 Bridge Station",
+    "lat": 17.67978,
+    "lng": 34.0037,
+    "parameters": [
+      {
+        "class": "BAROMETRO",
+        "unit": "hPa",
+        "sensor_ids": [
+          "210824581_2"
+        ]
+      },
+      {
+        "class": "BATTERIA",
+        "unit": "V",
+        "sensor_ids": [
+          "210824577_2"
+        ]
+      },
+      {
+        "class": "IDROMETRO",
+        "unit": "m",
+        "sensor_ids": [
+          "210824575_2"
+        ]
+      },
+      {
+        "class": "PLUVIOMETRO",
+        "unit": "mm",
+        "sensor_ids": [
+          "-1936659066_2"
+        ]
+      },
+      {
+        "class": "SIGNAL_STRENGTH",
+        "unit": "CSQ",
+        "sensor_ids": [
+          "210824579_2"
+        ]
+      },
+      {
+        "class": "TERMOMETRO_INTERNA",
+        "unit": "°C",
+        "sensor_ids": [
+          "210824578_2",
+          "210824580_2"
+        ]
+      }
+    ]
+  },
+  {
+    "station_id": "17.66206_33.97296",
+    "station_name": "Sudan - Elhasansb Station on Umm Eltyor Bridge",
+    "lat": 17.66206,
+    "lng": 33.97296,
+    "parameters": [
+      {
+        "class": "BAROMETRO",
+        "unit": "hPa",
+        "sensor_ids": [
+          "210824588_2"
+        ]
+      },
+      {
+        "class": "BATTERIA",
+        "unit": "V",
+        "sensor_ids": [
+          "210824584_2"
+        ]
+      },
+      {
+        "class": "IDROMETRO",
+        "unit": "m",
+        "sensor_ids": [
+          "210824583_2"
+        ]
+      },
+      {
+        "class": "PLUVIOMETRO",
+        "unit": "mm",
+        "sensor_ids": [
+          "-1936659059_2"
+        ]
+      },
+      {
+        "class": "SIGNAL_STRENGTH",
+        "unit": "CSQ",
+        "sensor_ids": [
+          "210824586_2"
+        ]
+      },
+      {
+        "class": "TERMOMETRO_INTERNA",
+        "unit": "°C",
+        "sensor_ids": [
+          "210824585_2",
+          "210824587_2"
+        ]
+      }
+    ]
+  },
+  {
+    "station_id": "19.54292_37.23568",
+    "station_name": "Sudan - Port Sudan Airport",
+    "lat": 19.54292,
+    "lng": 37.23568,
+    "parameters": [
+      {
+        "class": "ANEMOMETRO",
+        "unit": "m/s",
+        "sensor_ids": [
+          "210823964_2"
+        ]
+      },
+      {
+        "class": "ANEMOMETRO_RAFFICA",
+        "unit": "m/s",
+        "sensor_ids": [
+          "210823966_2"
+        ]
+      },
+      {
+        "class": "BAROMETRO",
+        "unit": "hPa",
+        "sensor_ids": [
+          "210823970_2"
+        ]
+      },
+      {
+        "class": "BATTERIA",
+        "unit": "V",
+        "sensor_ids": [
+          "210823959_2"
+        ]
+      },
+      {
+        "class": "DIREZIONEVENTO",
+        "unit": "Degrees",
+        "sensor_ids": [
+          "210823963_2"
+        ]
+      },
+      {
+        "class": "DIREZIONEVENTO_RAFFICA",
+        "unit": "Degrees",
+        "sensor_ids": [
+          "210823965_2"
+        ]
+      },
+      {
+        "class": "IGROMETRO",
+        "unit": "%",
+        "sensor_ids": [
+          "210823962_2"
+        ]
+      },
+      {
+        "class": "PLUVIOMETRO",
+        "unit": "mm",
+        "sensor_ids": [
+          "-1936659688_2"
+        ]
+      },
+      {
+        "class": "SIGNAL_STRENGTH",
+        "unit": "CSQ",
+        "sensor_ids": [
+          "210823968_2"
+        ]
+      },
+      {
+        "class": "TERMOMETRO",
+        "unit": "°C",
+        "sensor_ids": [
+          "210823961_2"
+        ]
+      },
+      {
+        "class": "TERMOMETRO_INTERNA",
+        "unit": "°C",
+        "sensor_ids": [
+          "210823967_2",
+          "210823969_2"
+        ]
+      }
+    ]
+  },
+  {
+    "station_id": "16.67150_33.43715",
+    "station_name": "Sudan - Shendi",
+    "lat": 16.6715,
+    "lng": 33.43715,
+    "parameters": [
+      {
+        "class": "ANEMOMETRO",
+        "unit": "m/s",
+        "sensor_ids": [
+          "210823976_2"
+        ]
+      },
+      {
+        "class": "ANEMOMETRO_RAFFICA",
+        "unit": "m/s",
+        "sensor_ids": [
+          "210823978_2"
+        ]
+      },
+      {
+        "class": "BAROMETRO",
+        "unit": "hPa",
+        "sensor_ids": [
+          "210823982_2"
+        ]
+      },
+      {
+        "class": "BATTERIA",
+        "unit": "V",
+        "sensor_ids": [
+          "210823971_2"
+        ]
+      },
+      {
+        "class": "DIREZIONEVENTO",
+        "unit": "Degrees",
+        "sensor_ids": [
+          "210823975_2"
+        ]
+      },
+      {
+        "class": "DIREZIONEVENTO_RAFFICA",
+        "unit": "Degrees",
+        "sensor_ids": [
+          "210823977_2"
+        ]
+      },
+      {
+        "class": "IGROMETRO",
+        "unit": "%",
+        "sensor_ids": [
+          "210823974_2"
+        ]
+      },
+      {
+        "class": "PLUVIOMETRO",
+        "unit": "mm",
+        "sensor_ids": [
+          "-1936659676_2"
+        ]
+      },
+      {
+        "class": "SIGNAL_STRENGTH",
+        "unit": "CSQ",
+        "sensor_ids": [
+          "210823980_2"
+        ]
+      },
+      {
+        "class": "TERMOMETRO",
+        "unit": "°C",
+        "sensor_ids": [
+          "210823973_2"
+        ]
+      },
+      {
+        "class": "TERMOMETRO_INTERNA",
+        "unit": "°C",
+        "sensor_ids": [
+          "210823979_2",
+          "210823981_2"
+        ]
+      }
+    ]
+  },
+  {
+    "station_id": "18.43040_37.73438",
+    "station_name": "Sudan - Toker",
+    "lat": 18.4304,
+    "lng": 37.73438,
+    "parameters": [
+      {
+        "class": "ANEMOMETRO",
+        "unit": "m/s",
+        "sensor_ids": [
+          "210823988_2"
+        ]
+      },
+      {
+        "class": "ANEMOMETRO_RAFFICA",
+        "unit": "m/s",
+        "sensor_ids": [
+          "210823990_2"
+        ]
+      },
+      {
+        "class": "BAROMETRO",
+        "unit": "hPa",
+        "sensor_ids": [
+          "210823994_2"
+        ]
+      },
+      {
+        "class": "BATTERIA",
+        "unit": "V",
+        "sensor_ids": [
+          "210823983_2"
+        ]
+      },
+      {
+        "class": "DIREZIONEVENTO",
+        "unit": "Degrees",
+        "sensor_ids": [
+          "210823987_2"
+        ]
+      },
+      {
+        "class": "DIREZIONEVENTO_RAFFICA",
+        "unit": "Degrees",
+        "sensor_ids": [
+          "210823989_2"
+        ]
+      },
+      {
+        "class": "IGROMETRO",
+        "unit": "%",
+        "sensor_ids": [
+          "210823986_2"
+        ]
+      },
+      {
+        "class": "PLUVIOMETRO",
+        "unit": "mm",
+        "sensor_ids": [
+          "-1936659664_2"
+        ]
+      },
+      {
+        "class": "SIGNAL_STRENGTH",
+        "unit": "CSQ",
+        "sensor_ids": [
+          "210823992_2"
+        ]
+      },
+      {
+        "class": "TERMOMETRO",
+        "unit": "°C",
+        "sensor_ids": [
+          "210823985_2"
+        ]
+      },
+      {
+        "class": "TERMOMETRO_INTERNA",
+        "unit": "°C",
+        "sensor_ids": [
+          "210823991_2",
+          "210823993_2"
+        ]
+      }
+    ]
+  }
+]
