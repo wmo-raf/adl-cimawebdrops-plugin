@@ -22,7 +22,7 @@ install_requires = get_requirements("base")
 setup(
     name="adl-cimawebdrops-plugin",
     version=VERSION,
-    url="https://github.com/wmo-raf/adl-cimawebdrops-plugin ",
+    url="https://github.com/wmo-raf/adl-cimawebdrops-plugin",
     author="WMO RAF",
     author_email="eotenyo@wmo.int",
     license="MIT",
