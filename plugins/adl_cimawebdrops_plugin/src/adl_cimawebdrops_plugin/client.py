@@ -4,6 +4,12 @@ from datetime import datetime
 import requests
 from django.core.cache import cache
 
+# Today's ingestion timeout, unchanged. The diagnostic's on-demand checks pass
+# their own bound instead — see models.SOURCE_CHECK_TIMEOUT_SECONDS.
+DEFAULT_TIMEOUT = 60
+
+SENSOR_CLASSES_PATH = "/sensors/classes/"
+
 # The ingestion diagnostic's shared HTTP status table. The category strings are
 # written out rather than imported from core: importing core's vocabulary would
 # break this plugin at import time on an older core, and core drops any value it
@@ -57,7 +63,8 @@ def generate_station_id(lat: float, lng: float, precision: int = 5) -> str:
 
 
 class CimaWebDropsClient(object):
-    def __init__(self, token_endpoint, client_id, username, password, api_base_url, timeout=60, use_cache=True):
+    def __init__(self, token_endpoint, client_id, username, password, api_base_url,
+                 timeout=DEFAULT_TIMEOUT, retries=None, use_cache=True):
         self.token_endpoint = token_endpoint
         self.client_id = client_id
         self.username = username
@@ -69,6 +76,15 @@ class CimaWebDropsClient(object):
         self._access_token = None
         self._token_expiry_epoch = 0  # epoch seconds
 
+        self.session = requests.Session()
+        if retries is not None:
+            # Mounted only when asked for. requests' default adapter already
+            # retries nothing, so the ingestion path keeps its behaviour and
+            # the on-demand diagnostic checks can say so explicitly.
+            adapter = requests.adapters.HTTPAdapter(max_retries=retries)
+            self.session.mount("https://", adapter)
+            self.session.mount("http://", adapter)
+
     def _ensure_token(self):
         now = int(time.time())
 
@@ -76,7 +92,7 @@ class CimaWebDropsClient(object):
             return  # still valid (30s safety margin)
 
         # Obtain fresh token via password grant
-        r = requests.post(
+        r = self.session.post(
             self.token_endpoint,
             data={
                 "grant_type": "password",
@@ -88,6 +104,14 @@ class CimaWebDropsClient(object):
         )
         _raise_for_status(r)
         data = r.json()
+
+        # A 2xx is not proof of a token: requests follows redirects, so an
+        # expired session landing on an HTML login page arrives here as a clean
+        # 200, and a JSON body without the key is the same non-answer. Both
+        # raise ValueError, which is what the source check catches.
+        if not isinstance(data, dict) or not data.get("access_token"):
+            raise ValueError("The token response carried no access token.")
+
         self._access_token = data["access_token"]
         # Many IdPs return 'expires_in' seconds; fall back to 300s if missing
         self._token_expiry_epoch = int(time.time()) + int(data.get("expires_in", 300))
@@ -102,11 +126,14 @@ class CimaWebDropsClient(object):
         if self.use_cache and cache.get(cache_key):
             return cache.get(cache_key)
 
-        url = f"{self.api_base_url}/sensors/classes/"
-        r = requests.get(url, headers=self._auth_headers(), timeout=self.timeout)
+        url = f"{self.api_base_url}{SENSOR_CLASSES_PATH}"
+        r = self.session.get(url, headers=self._auth_headers(), timeout=self.timeout)
         _raise_for_status(r)
 
         sensor_classes = r.json()
+
+        if not isinstance(sensor_classes, list):
+            raise ValueError("The response carried no sensor class list.")
 
         if self.use_cache:
             # Cache for 24 hours
@@ -123,7 +150,7 @@ class CimaWebDropsClient(object):
                 return cache.get(cache_key)
 
         url = f"{self.api_base_url}/sensors/list/{sensor_class}/"
-        r = requests.get(url, headers=self._auth_headers(), timeout=self.timeout)
+        r = self.session.get(url, headers=self._auth_headers(), timeout=self.timeout)
         _raise_for_status(r)
 
         sensors = r.json()
@@ -308,7 +335,7 @@ class CimaWebDropsClient(object):
         if date_as_string:
             params["date_as_string"] = "true"
 
-        r = requests.get(url, headers=self._auth_headers(), params=params, timeout=self.timeout)
+        r = self.session.get(url, headers=self._auth_headers(), params=params, timeout=self.timeout)
         _raise_for_status(r)
 
         data = r.json()
