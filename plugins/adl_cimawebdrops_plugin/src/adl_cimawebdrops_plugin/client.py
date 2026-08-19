@@ -4,6 +4,49 @@ from datetime import datetime
 import requests
 from django.core.cache import cache
 
+# The ingestion diagnostic's shared HTTP status table. The category strings are
+# written out rather than imported from core: importing core's vocabulary would
+# break this plugin at import time on an older core, and core drops any value it
+# does not recognise anyway.
+#
+# 400 and 422 decline because a malformed request is our bug, 429 because rate
+# limiting is our polling schedule, and 3xx because a redirect says nothing
+# about the source. Nothing here ever stamps UNKNOWN: declining leaves core's
+# read-time classification free to do better later, and a stamp does not.
+STATUS_CATEGORIES = {
+    401: "AUTH_FAILED",
+    403: "PERMISSION_DENIED",
+    404: "PATH_NOT_FOUND",
+}
+
+
+def category_for_status(status_code):
+    """The diagnostic failure category for an HTTP status, or None where the
+    status carries no honest one."""
+    if status_code in STATUS_CATEGORIES:
+        return STATUS_CATEGORIES[status_code]
+    if status_code is not None and 500 <= status_code < 600:
+        return "PROTOCOL_ERROR"
+    return None
+
+
+def _raise_for_status(response):
+    """``raise_for_status()``, tagging the raised error for the diagnostic.
+
+    The exception is stamped in place rather than wrapped, so the original type
+    still matches core's own exception table and the traceback survives. A code
+    from the server is proof the server answered, which is what makes every
+    category derived from one layer 5.
+    """
+    try:
+        response.raise_for_status()
+    except requests.HTTPError as e:
+        category = category_for_status(e.response.status_code)
+        if category:
+            e.adl_category = category
+            e.adl_layer = 5
+        raise
+
 
 def generate_station_id(lat: float, lng: float, precision: int = 5) -> str:
     """
@@ -43,7 +86,7 @@ class CimaWebDropsClient(object):
             },
             timeout=self.timeout,
         )
-        r.raise_for_status()
+        _raise_for_status(r)
         data = r.json()
         self._access_token = data["access_token"]
         # Many IdPs return 'expires_in' seconds; fall back to 300s if missing
@@ -61,7 +104,7 @@ class CimaWebDropsClient(object):
 
         url = f"{self.api_base_url}/sensors/classes/"
         r = requests.get(url, headers=self._auth_headers(), timeout=self.timeout)
-        r.raise_for_status()
+        _raise_for_status(r)
 
         sensor_classes = r.json()
 
@@ -81,7 +124,7 @@ class CimaWebDropsClient(object):
 
         url = f"{self.api_base_url}/sensors/list/{sensor_class}/"
         r = requests.get(url, headers=self._auth_headers(), timeout=self.timeout)
-        r.raise_for_status()
+        _raise_for_status(r)
 
         sensors = r.json()
 
@@ -266,7 +309,7 @@ class CimaWebDropsClient(object):
             params["date_as_string"] = "true"
 
         r = requests.get(url, headers=self._auth_headers(), params=params, timeout=self.timeout)
-        r.raise_for_status()
+        _raise_for_status(r)
 
         data = r.json()
         timeline = data[0]["timeline"]
