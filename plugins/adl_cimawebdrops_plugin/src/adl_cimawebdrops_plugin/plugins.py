@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from adl.core.registries import Plugin
 
@@ -54,5 +54,41 @@ class CimaWebdropsPlugin(Plugin):
                     "sensor_id": cima_sensor_info_parts[1]
                 })
 
-        records = client.get_data_for_sensors(sensors_info, date_from=dt_from, date_to=dt_to)
-        return records
+        station_data = {}
+
+        for sensor in sensors_info:
+            sensor_class = sensor["sensor_class"]
+            sensor_id = sensor["sensor_id"]
+
+            sensor_data, sources_count = client.get_data_for_sensor(
+                sensor_class, sensor_id, date_from=dt_from, date_to=dt_to, date_as_string=True
+            )
+
+            # Duck-typed sources-count handover: core stores this on the run's
+            # activity log so "looked, found nothing" (0) stays distinguishable
+            # from "never looked" (None). Committed per sensor, each time a
+            # response has been received and parsed — a run whose first call
+            # raises leaves the attribute None and makes no claim, while one
+            # that fails after three sensors answered keeps what those three
+            # offered and so acquits the source.
+            #
+            # Never len(sensors_info): that is a count of our own configured
+            # variable mappings, knowable without touching the network, so it
+            # would say nothing about the source while looking like evidence.
+            if getattr(station_link, "adl_sources_count", None) is None:
+                station_link.adl_sources_count = 0
+            station_link.adl_sources_count += sources_count
+
+            if not sensor_data:
+                continue
+
+            for obs_date_str, value in sensor_data.items():
+                if obs_date_str not in station_data:
+                    obs_date_obj = datetime.strptime(obs_date_str, "%Y%m%d%H%M")
+                    station_data[obs_date_str] = {
+                        "observation_time": obs_date_obj
+                    }
+
+                station_data[obs_date_str][f"{sensor_class}:{sensor_id}"] = value
+
+        return list(station_data.values())

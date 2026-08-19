@@ -1,5 +1,4 @@
 import time
-from datetime import datetime
 
 import requests
 from django.core.cache import cache
@@ -317,11 +316,20 @@ class CimaWebDropsClient(object):
         """
         Fetches data for a specific sensor within the given date range.
 
+        Returns ``(date_value_dict, sources_count)``. The count is of the raw
+        entries this response carried for the requested window — the source
+        applies the window itself through the `from` and `to` parameters — read
+        before the collapse into a timestamp-keyed dict, which drops repeats,
+        and before any mapping or unit conversion. A count taken after either
+        would let our own handling read as the source having offered nothing.
+        It leaves the client by return value because the station link it is
+        reported on belongs to the plugin, not here.
+
         :param sensor_class: Class of the sensor (e.g., "TERMOMETRO")
         :param sensor_id: ID of the sensor
         :param date_from: Start date in "YYYYMMDDHHMM" format
         :param date_to: End date in "YYYYMMDDHHMM" format
-        :return: List of records with sensor data
+        :return: Tuple of the date-keyed readings and the source-item count
         """
 
         url = f"{self.api_base_url}/sensors/data/{sensor_class}/{sensor_id}/"
@@ -345,45 +353,4 @@ class CimaWebDropsClient(object):
         # Create dictionary with date as key and value as reading
         date_value_dict = dict(zip(timeline, values))
 
-        return date_value_dict
-
-    def get_data_for_sensors(self, sensors_info, date_from=None, date_to=None, date_as_string=True):
-        """
-        Fetches data for the specified sensors within the given date range.
-
-        :param sensors_info: List of dicts with sensor class and ID
-        :param date_from: Start date in "YYYYMMDDHHMM" format
-        :param date_to: End date in "YYYYMMDDHHMM" format
-        :return: List of records with sensor data
-        """
-
-        if not sensors_info:
-            return []
-
-        station_data = {}
-
-        for sensor in sensors_info:
-            if "sensor_class" not in sensor or "sensor_id" not in sensor:
-                raise ValueError("Each sensor must have 'sensor_class' and 'sensor_id' keys")
-
-            sensor_class = sensor["sensor_class"]
-            sensor_id = sensor["sensor_id"]
-
-            sensor_data = self.get_data_for_sensor(sensor_class, sensor_id, date_from, date_to, date_as_string=True)
-            if not sensor_data:
-                continue
-
-            for obs_date_str, value in sensor_data.items():
-                if obs_date_str not in station_data:
-                    if date_as_string:
-                        # Convert string date to datetime object
-                        obs_date_obj = datetime.strptime(obs_date_str, "%Y%m%d%H%M")
-                    else:
-                        obs_date_obj = datetime.strptime(obs_date_str, "%Y-%m-%dT%H:%M:%SZ")
-                    station_data[obs_date_str] = {
-                        "observation_time": obs_date_obj
-                    }
-
-                station_data[obs_date_str][f"{sensor_class}:{sensor_id}"] = value
-
-        return list(station_data.values())
+        return date_value_dict, len(values)
