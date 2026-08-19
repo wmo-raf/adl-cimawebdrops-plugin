@@ -197,6 +197,103 @@ class CimaWebDropsStationLink(StationLink):
         """
         return self.start_date
 
+    def check_station_source(self):
+        """
+        Ask whether this station's CIMA identifier resolves at the source
+        (layer 5 of the ingestion diagnostic, station-scoped).
+
+        `get_station_parameters()` cannot answer this on its own: it returns an
+        empty list both for a station with nothing to report and for one that
+        does not exist, so used as-is it would report OK for a typo — exactly
+        the false confidence this check exists to destroy. So the check is a
+        membership test against the station list, which is keyed by the same
+        synthetic coordinate-derived id, and reads the parameters straight off
+        the matched entry rather than paying for a second call.
+
+        The cache is bypassed over the whole check rather than only its failure
+        branch: a day-old list would report a station added upstream yesterday
+        as proven missing, causing the very misconfiguration the check exists
+        to detect.
+        """
+        from adl.core.source_checks import SourceCheckResult, SourceCheckStatus
+
+        connection = self.network_connection
+        host = connection.source_host
+
+        try:
+            client = connection.get_api_client(use_cache=False,
+                                               timeout=SOURCE_CHECK_TIMEOUT_SECONDS,
+                                               retries=0)
+            stations = client.get_stations()
+        except ValueError:
+            return SourceCheckResult(
+                status=SourceCheckStatus.FAILED,
+                message=gettext("%(host)s answered, but the response was not a station "
+                                "list.") % {
+                    "host": host,
+                },
+            )
+        except requests.RequestException as e:
+            # Never convert a failed read into OK — and never into a claim of
+            # absence either, which we have no proof of here.
+            return SourceCheckResult(
+                status=SourceCheckStatus.FAILED,
+                message=gettext("Could not read the station list from %(host)s: "
+                                "%(error)s") % {
+                    "host": host,
+                    "error": e,
+                },
+            )
+
+        if not stations:
+            # A soft-empty list is not proof of absence: the source offered no
+            # sensors at all, which says nothing about this station.
+            return SourceCheckResult(
+                status=SourceCheckStatus.FAILED,
+                message=gettext("%(host)s returned no stations at all, so this "
+                                "station could not be looked up.") % {
+                    "host": host,
+                },
+            )
+
+        station = stations.get(self.cima_station_id)
+
+        if station is None:
+            # Absent from a list the source really returned is proof, not
+            # suspicion: this station link can never ingest anything.
+            return SourceCheckResult(
+                status=SourceCheckStatus.FAILED,
+                category="PATH_NOT_FOUND",
+                message=gettext("Station %(station_id)s was not found in the source's "
+                                "station list.") % {
+                    "station_id": self.cima_station_id,
+                },
+            )
+
+        # The upstream's own label is what catches a valid-but-wrong id — a real
+        # station belonging to a different site — which is the failure that
+        # yields plausible wrong data rather than an outage. The parameter count
+        # is a byproduct of the entry we already hold; zero is still OK, stated
+        # plainly, and left for the operator to judge.
+        label = station.get("station_name") or ""
+        count = len(station.get("parameters") or [])
+
+        if label:
+            message = gettext('Station %(station_id)s found upstream as "%(label)s", '
+                              'offering %(count)s parameter(s).') % {
+                "station_id": self.cima_station_id,
+                "label": label,
+                "count": count,
+            }
+        else:
+            message = gettext("Station %(station_id)s was found in the source's station "
+                              "list, offering %(count)s parameter(s).") % {
+                "station_id": self.cima_station_id,
+                "count": count,
+            }
+
+        return SourceCheckResult(status=SourceCheckStatus.OK, message=message)
+
 
 class CimaWebDropsStationLinkVariableMapping(Orderable):
     station_link = ParentalKey(CimaWebDropsStationLink, on_delete=models.CASCADE, related_name="variable_mappings")
