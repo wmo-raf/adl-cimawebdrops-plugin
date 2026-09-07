@@ -1,0 +1,28 @@
+# Extra services for the documentation screenshot harness, merged into the
+# plugin's dev stack by adl's scripts/capture-plugin-docs.sh.
+#
+# One container serves both URLs the connection configures — the token endpoint
+# and the data API — because they are one platform; the fixture points both
+# fields at it. The alias is a dotted name under .test rather than the bare
+# service name: both fields are URLFields, which reject a bare hostname, and the
+# host is printed in every diagnostic message the guide captures, where a
+# real-looking demo name reads better than "mock_cima".
+services:
+  mock_cima:
+    build: docs/screenshots/mock-api
+    image: adl-docs-mock-cima
+    container_name: adl-cimawebdrops-plugin-docs-mock-api
+    environment:
+      # must match connection.fields.stations_timezone in fixture.json: the
+      # stub reports in the stations' local time, the way the platform does
+      SAMPLE_TZ: Africa/Nairobi
+    networks:
+      default:
+        aliases:
+          - webdrops.example.test
+  adl:
+    depends_on:
+      - mock_cima
+  adl_celery_worker:
+    depends_on:
+      - mock_cima

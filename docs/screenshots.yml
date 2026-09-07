@@ -1,0 +1,77 @@
+# Screenshot manifest for the ADL CIMA WebDrops Plugin guide (docs/guide.md).
+# Regenerate from the adl repo:  scripts/capture-plugin-docs.sh ../adl-plugins/adl-cimawebdrops-plugin
+# Fixture: docs/screenshots/fixture.json (connection 1 = "WebDrops (demo)", station link 1 = DEMO001).
+# Both URLs are connection fields, so a stub can be pointed at: a token endpoint that
+# answers the password grant and a data API serving recorded /sensors/classes/,
+# /sensors/list/<class>/ and /sensors/data/<class>/<id>/ payloads
+# (docs/screenshots/compose.mock.yml + docs/screenshots/mock-api/ — to be added by the
+# execution pass; src/.../stations_sample.json is a recorded station list to start from).
+# Export CIMAWEBDROPS_TOKEN_ENDPOINT / CLIENT_ID / USERNAME / PASSWORD / API_BASE_URL /
+# STATION_ID_1 in docs/screenshots/credentials.env to run against a live platform.
+# Format: defaults + screenshots (name/url/setup/callouts/capture), run by adl's
+# docs/screenshots/capture/capture.py; output derives from name: docs/images/<name>.png.
+# Callouts are numbered badges/outlines only — never text in images.
+# Every entry has been run against the stack this file describes.
+#
+# The mock lives in docs/screenshots/mock-api/ and is wired in by
+# docs/screenshots/compose.mock.yml; its sensor-class taxonomy is transcribed
+# from a real deployment, its station names, coordinates and sensor ids are demo
+# values, and it reports in the stations' local time. See mock-api/server.py.
+
+defaults:
+  viewport:
+  - 1440
+  - 900
+  padding: 12
+screenshots:
+- name: cimawebdrops_connection_form
+  url: /cimawebdropsconnection/edit/1/
+  setup:
+  - fill: { selector: '#id_password', value: '••••••••••••' }
+  callouts:
+  - badge: { target: '#id_token_endpoint', n: 1 }
+  - badge: { target: '#id_client_id', n: 2 }
+  - badge: { target: '#id_username', n: 3 }
+  - badge: { target: '#id_password', n: 4 }
+  - badge: { target: '#id_api_base_url', n: 5 }
+  capture:
+    selector: "#w-editor-form"
+- name: cimawebdrops_station_link_form
+  url: /cimawebdropsstationlink/edit/1/
+  setup:
+  - wait_until: "document.querySelector('#id_cima_station_id').options.length > 1"
+  callouts:
+  - badge: { target: '#id_cima_station_id', n: 1 }
+  - badge: { target: '#id_start_date', n: 2 }
+  - badge: { target: '#id_variable_mappings-FORMS', n: 3 }
+  capture:
+    selector: "#w-editor-form"
+- name: cimawebdrops_station_select
+  url: /cimawebdropsstationlink/edit/1/
+  setup:
+  - wait_until: "document.querySelector('#id_cima_station_id').options.length > 1"
+  callouts:
+  - highlight: '#id_cima_station_id'
+  capture:
+    selector: '#panel-cima_station_id-section'
+- name: cimawebdrops_sensor_select
+  url: /cimawebdropsstationlink/edit/1/
+  setup:
+  - wait_until: "document.querySelector('#id_variable_mappings-0-cima_sensor_info').options.length > 1"
+  callouts:
+  - badge: { target: '#id_variable_mappings-0-cima_sensor_info', n: 1 }
+  # the chooser, not the field: cima_parameter_unit itself renders as a hidden
+  # input beside the widget, and a callout on a 0x0 element is refused
+  - badge: { target: '#id_variable_mappings-0-cima_parameter_unit-chooser', n: 2 }
+  capture:
+    selector: '#inline_child_variable_mappings-0'
+- name: cimawebdrops_ingestion_diagnostic
+  url: /monitoring/connection/1/health/
+  callouts:
+  - highlight: .health-probe-form button
+  capture:
+    selector: .health-diagnostic
+- name: cimawebdrops_station_source_check
+  url: /cimawebdropsstationlink/inspect/1/
+  capture:
+    selector: ":nth-match(.collection-status, 2)"
