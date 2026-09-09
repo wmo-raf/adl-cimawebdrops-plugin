@@ -1,0 +1,93 @@
+{
+  "capture": {
+    "connection": "WebDrops (demo)",
+    "ingest": true,
+    "probe": true,
+    "station_checks": [
+      "DEMO001",
+      "DEMO002"
+    ],
+    "wait": 240,
+    "present_interval": 15
+  },
+  "connection": {
+    "model": "adl_cimawebdrops_plugin.CimaWebDropsConnection",
+    "fields": {
+      "name": "WebDrops (demo)",
+      "plugin": "adl_cimawebdrops_plugin",
+      "stations_timezone": "Africa/Nairobi",
+      "plugin_processing_interval": 1,
+      "token_endpoint": "$ENV:CIMAWEBDROPS_TOKEN_ENDPOINT|http://webdrops.example.test/auth/realms/webdrops/protocol/openid-connect/token",
+      "client_id": "$ENV:CIMAWEBDROPS_CLIENT_ID|adl-demo",
+      "username": "$ENV:CIMAWEBDROPS_USERNAME|demo",
+      "password": "$ENV:CIMAWEBDROPS_PASSWORD|demo-password",
+      "api_base_url": "$ENV:CIMAWEBDROPS_API_BASE_URL|http://webdrops.example.test"
+    }
+  },
+  "station_links": [
+    {
+      "model": "adl_cimawebdrops_plugin.CimaWebDropsStationLink",
+      "station": "DEMO001",
+      "fields": {
+        "cima_station_id": "$ENV:CIMAWEBDROPS_STATION_ID_1|-1.25000_36.74000",
+        "start_date": "$NOW-1d"
+      },
+      "children": {
+        "variable_mappings": [
+          {
+            "adl_parameter": "Air Temperature",
+            "cima_sensor_info": "TERMOMETRO:100109_2",
+            "cima_parameter_unit": "degC"
+          },
+          {
+            "adl_parameter": "Relative Humidity",
+            "cima_sensor_info": "IGROMETRO:100106_2",
+            "cima_parameter_unit": "percent"
+          },
+          {
+            "adl_parameter": "Atmospheric Pressure",
+            "cima_sensor_info": "BAROMETRO:100102_2",
+            "cima_parameter_unit": "hPa"
+          },
+          {
+            "adl_parameter": "Precipitation",
+            "cima_sensor_info": "PLUVIOMETRO:100107_2",
+            "cima_parameter_unit": "mm"
+          },
+          {
+            "adl_parameter": "Wind Speed",
+            "cima_sensor_info": "ANEMOMETRO:100100_2",
+            "cima_parameter_unit": "m/s"
+          },
+          {
+            "adl_parameter": "Wind Direction",
+            "cima_sensor_info": "DIREZIONEVENTO:100104_2",
+            "cima_parameter_unit": "degree"
+          }
+        ]
+      }
+    },
+    {
+      "model": "adl_cimawebdrops_plugin.CimaWebDropsStationLink",
+      "station": "DEMO002",
+      "fields": {
+        "cima_station_id": "$ENV:CIMAWEBDROPS_STATION_ID_2|3.12000_35.60000",
+        "start_date": "$NOW-1d"
+      },
+      "children": {
+        "variable_mappings": [
+          {
+            "adl_parameter": "Air Temperature",
+            "cima_sensor_info": "TERMOMETRO:100209_2",
+            "cima_parameter_unit": "degC"
+          },
+          {
+            "adl_parameter": "Precipitation",
+            "cima_sensor_info": "PLUVIOMETRO:100207_2",
+            "cima_parameter_unit": "mm"
+          }
+        ]
+      }
+    }
+  ]
+}
